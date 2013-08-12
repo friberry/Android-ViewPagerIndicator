@@ -23,9 +23,9 @@ import android.support.v4.view.ViewPager.OnPageChangeListener;
 import android.util.AttributeSet;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.FrameLayout;
 import android.widget.HorizontalScrollView;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
@@ -70,7 +70,7 @@ public class TabPageIndicator extends HorizontalScrollView implements PageIndica
     private ViewPager mViewPager;
     private ViewPager.OnPageChangeListener mListener;
 
-    private int mMaxTabWidth;
+    private int mForceTabWidth;
     private int mSelectedTabIndex;
 
     private OnTabReselectedListener mTabReselectedListener;
@@ -98,14 +98,10 @@ public class TabPageIndicator extends HorizontalScrollView implements PageIndica
         setFillViewport(lockedExpanded);
 
         final int childCount = mTabLayout.getChildCount();
-        if (childCount > 1 && (widthMode == MeasureSpec.EXACTLY || widthMode == MeasureSpec.AT_MOST)) {
-            if (childCount > 2) {
-                mMaxTabWidth = (int)(MeasureSpec.getSize(widthMeasureSpec) * 0.4f);
-            } else {
-                mMaxTabWidth = MeasureSpec.getSize(widthMeasureSpec) / 2;
-            }
+        if (childCount == 2 && (widthMode == MeasureSpec.EXACTLY || widthMode == MeasureSpec.AT_MOST)) {
+            mForceTabWidth = MeasureSpec.getSize(widthMeasureSpec) / 2;
         } else {
-            mMaxTabWidth = -1;
+            mForceTabWidth = -1;
         }
 
         final int oldWidth = getMeasuredWidth();
@@ -151,12 +147,15 @@ public class TabPageIndicator extends HorizontalScrollView implements PageIndica
     }
 
     private void addTab(int index, View view) {
-        final TabView tabView = new TabView(getContext(),view);
+        final TabView tabView = new TabView(getContext());
         tabView.mIndex = index;
         tabView.setFocusable(true);
         tabView.setOnClickListener(mTabClickListener);
+        RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(WRAP_CONTENT, MATCH_PARENT);
+        layoutParams.addRule(RelativeLayout.CENTER_IN_PARENT);
+        tabView.addView(view, layoutParams);
 
-        mTabLayout.addView(tabView, new LinearLayout.LayoutParams(0, MATCH_PARENT, 1));
+        mTabLayout.addView(tabView, new LinearLayout.LayoutParams(WRAP_CONTENT, MATCH_PARENT, 1));
     }
 
     @Override
@@ -257,21 +256,20 @@ public class TabPageIndicator extends HorizontalScrollView implements PageIndica
         mListener = listener;
     }
 
-    private class TabView extends FrameLayout {
+    private class TabView extends RelativeLayout {
         private int mIndex;
 
-        public TabView(Context context,View view) {
+        public TabView(Context context) {
             super(context, null, R.attr.vpiTabPageIndicatorStyle);
-            addView(view, new FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT));
         }
 
         @Override
         public void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
             super.onMeasure(widthMeasureSpec, heightMeasureSpec);
 
-            // Re-measure if we went beyond our maximum size.
-            if (mMaxTabWidth > 0 && getMeasuredWidth() > mMaxTabWidth) {
-                super.onMeasure(MeasureSpec.makeMeasureSpec(mMaxTabWidth, MeasureSpec.EXACTLY),
+            // Re-measure if we fixed the tab width
+            if (mForceTabWidth > 0) {
+                super.onMeasure(MeasureSpec.makeMeasureSpec(mForceTabWidth, MeasureSpec.EXACTLY),
                         heightMeasureSpec);
             }
         }
