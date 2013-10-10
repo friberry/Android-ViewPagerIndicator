@@ -97,12 +97,7 @@ public class TabPageIndicator extends HorizontalScrollView implements PageIndica
         final boolean lockedExpanded = widthMode == MeasureSpec.EXACTLY;
         setFillViewport(lockedExpanded);
 
-        final int childCount = mTabLayout.getChildCount();
-        if (childCount == 2 && (widthMode == MeasureSpec.EXACTLY || widthMode == MeasureSpec.AT_MOST)) {
-            mForceTabWidth = MeasureSpec.getSize(widthMeasureSpec) / 2;
-        } else {
-            mForceTabWidth = -1;
-        }
+        mForceTabWidth = calcForceTabWidth(mTabLayout.getChildCount(), widthMeasureSpec, heightMeasureSpec);
 
         final int oldWidth = getMeasuredWidth();
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
@@ -111,6 +106,16 @@ public class TabPageIndicator extends HorizontalScrollView implements PageIndica
         if (lockedExpanded && oldWidth != newWidth) {
             // Recenter the tab display if we're at a new (scrollable) size.
             setCurrentItem(mSelectedTabIndex);
+        }
+    }
+
+    protected int calcForceTabWidth(int childCount, int widthMeasureSpec, int heightMeasureSpec) {
+        final int widthMode = MeasureSpec.getMode(widthMeasureSpec);
+
+        if (childCount == 2 && (widthMode == MeasureSpec.EXACTLY || widthMode == MeasureSpec.AT_MOST)) {
+            return MeasureSpec.getSize(widthMeasureSpec) / 2;
+        } else {
+            return -1;
         }
     }
 
