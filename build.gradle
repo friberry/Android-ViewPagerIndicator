@@ -9,7 +9,7 @@ buildscript {
 }
 
 allprojects {
-  group = 'com.viewpagerindicator'
+  group = 'com.friberry.viewpagerindicator'
   version = '2.4.1'
 
   repositories {
